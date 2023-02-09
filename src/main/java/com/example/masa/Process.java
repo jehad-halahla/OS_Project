@@ -1,6 +1,6 @@
 package com.example.masa;
 //this class implements comparable so that we can sort the processes by arrival time
-
+// hiiiiiiiiiiiiiiiiiiiiiiiii
 public class Process implements Comparable<Process> {
     private int PID;
 
