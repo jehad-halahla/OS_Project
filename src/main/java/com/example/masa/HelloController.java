@@ -79,11 +79,11 @@ public class HelloController{
             FileWriter writer = new FileWriter(file);
             for (int i = 0; i < processes.length; i++) {
                 writer.write(processes[i].getPID() + " " + processes[i].getArrivalTime() + " ");
-                for (int j = 0; j < processes[i].getCpuBursts().length; j++) {
+                for (int j = 0; j < processes[i].getCpuBursts().size(); j++) {
                     if (j == processes[i].getNumOfCpuBursts() - 1)
-                        writer.write(processes[i].getCpuBursts()[j] + "\n");
+                        writer.write(processes[i].getCpuBursts().get(j) + "\n");
                     else
-                        writer.write(processes[i].getCpuBursts()[j] + " ");
+                        writer.write(processes[i].getCpuBursts().get(j)+ " ");
                 }
             }
             writer.close();
@@ -93,11 +93,11 @@ public class HelloController{
         }
         for (int i = 0; i < processes.length; i++) {
             output1.setText(processes[i].getPID() + " " + processes[i].getArrivalTime() + " ");
-            for (int j = 0; j < processes[i].getCpuBursts().length; j++) {
+            for (int j = 0; j < processes[i].getCpuBursts().size(); j++) {
                 if (j == processes[i].getNumOfCpuBursts() - 1)
-                    output1.setText(processes[i].getCpuBursts()[j] + "\n");
+                    output1.setText(processes[i].getCpuBursts().get(j)+ "\n");
                 else
-                    output1.setText(processes[i].getCpuBursts()[j] + " " + processes[i].getIoBursts()[j] + " ");
+                    output1.setText(processes[i].getCpuBursts().get(j) + " " + processes[i].getIoBursts().get(j) + " ");
             }
 
 
