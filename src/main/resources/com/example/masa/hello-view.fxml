@@ -1,24 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<VBox alignment="CENTER" focusTraversable="true" prefHeight="314.0" prefWidth="361.0" spacing="20.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/19" fx:controller="com.example.masa.HelloController">
-    <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-    </padding>
-   <VBox alignment="CENTER" prefHeight="138.0" prefWidth="322.0">
-      <children>
-          <Button onAction="#onHelloButtonClick" text="hi my name is jehad">
-            <font>
-               <Font name="System Italic" size="18.0" />
-            </font>
-         </Button>
-      </children>
-   </VBox>
-
-    <Label fx:id="welcomeText" text="this is me " />
-</VBox>
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.masa.HelloController">
+   <children>
+      <Label fx:id="label1" layoutX="16.0" layoutY="102.0" prefHeight="18.0" prefWidth="120.0" text="Number of processes" />
+      <TextField fx:id="text1" layoutX="165.0" layoutY="98.0" />
+      <Label fx:id="label2" layoutX="10.0" layoutY="146.0" text=" Max number of cpu bursts" />
+      <Label fx:id="label3" layoutX="15.0" layoutY="193.0" text="Max arrival time" />
+      <Label fx:id="label4" layoutX="14.0" layoutY="239.0" text="Max CPU burst time" />
+      <TextField fx:id="text2" layoutX="165.0" layoutY="142.0" />
+      <TextField fx:id="text5" layoutX="165.0" layoutY="286.0" />
+      <TextField fx:id="text4" layoutX="164.0" layoutY="234.0" prefHeight="26.0" prefWidth="151.0" />
+      <TextField fx:id="text3" layoutX="165.0" layoutY="189.0" />
+      <Label fx:id="label5" layoutX="19.0" layoutY="290.0" text="Max IO burst time" />
+      <Label fx:id="label6" layoutX="14.0" layoutY="341.0" text="Minimum CPU burst time" />
+      <Label fx:id="label7" layoutX="14.0" layoutY="386.0" text="Minimum IO burst time" />
+      <TextField fx:id="text6" layoutX="165.0" layoutY="337.0" />
+      <TextField fx:id="text7" layoutX="165.0" layoutY="382.0" />
+      <TextField fx:id="output1" layoutX="46.0" layoutY="435.0" prefHeight="64.0" prefWidth="568.0" />
+      
+      <Button fx:id="ll" layoutX="459.0" layoutY="151.0" mnemonicParsing="false" onMousePressed="#masa" text="Button" />
+      <TextField fx:id="output2" layoutX="57.0" layoutY="541.0" prefHeight="126.0" prefWidth="551.0" />
+   </children>
+</AnchorPane>
