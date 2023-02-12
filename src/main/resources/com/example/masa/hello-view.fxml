@@ -2,10 +2,12 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.masa.HelloController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="800.0" style="-fx-background-color: PEACHPUFF;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.masa.HelloController">
    <children>
       <Label fx:id="label1" layoutX="16.0" layoutY="102.0" prefHeight="18.0" prefWidth="120.0" text="Number of processes" />
       <TextField fx:id="text1" layoutX="165.0" layoutY="98.0" />
@@ -21,9 +23,21 @@
       <Label fx:id="label7" layoutX="14.0" layoutY="386.0" text="Minimum IO burst time" />
       <TextField fx:id="text6" layoutX="165.0" layoutY="337.0" />
       <TextField fx:id="text7" layoutX="165.0" layoutY="382.0" />
-      <TextField fx:id="output1" layoutX="46.0" layoutY="435.0" prefHeight="64.0" prefWidth="568.0" />
       
-      <Button fx:id="ll" layoutX="459.0" layoutY="151.0" mnemonicParsing="false" onMousePressed="#masa" text="Button" />
-      <TextField fx:id="output2" layoutX="57.0" layoutY="541.0" prefHeight="126.0" prefWidth="551.0" />
+      <Button layoutX="623.0" layoutY="345.0" mnemonicParsing="false" onMousePressed="#button1" prefHeight="26.0" prefWidth="69.0" text="Run" />
+      <Button fx:id="button2" layoutX="623.0" layoutY="390.0" mnemonicParsing="false" onMousePressed="#button2" prefHeight="26.0" prefWidth="69.0" text="Pause" />
+      <Label layoutX="14.0" layoutY="433.0" prefHeight="18.0" prefWidth="85.0" text="Output">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label alignment="TOP_CENTER" layoutX="197.0" layoutY="28.0" prefHeight="27.0" prefWidth="310.0" text="Cpu scheduling ">
+         <font>
+            <Font name="System Bold" size="29.0" />
+         </font>
+      </Label>
+      <TextField fx:id="text8" layoutX="529.0" layoutY="98.0" />
+      <Label layoutX="416.0" layoutY="101.0" prefHeight="11.0" prefWidth="90.0" text="Quantum time" />
+      <TextArea fx:id="output2" layoutX="30.0" layoutY="460.0" prefHeight="200.0" prefWidth="715.0" />
    </children>
 </AnchorPane>

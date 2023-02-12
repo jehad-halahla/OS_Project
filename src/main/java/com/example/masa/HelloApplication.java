@@ -25,7 +25,7 @@ public class HelloApplication extends Application {
         // we took the input for generator from user
         Scanner input = new Scanner(System.in);
         System.out.println("Enter the number of processes: ");
-        int numOfProccesses = input.nextInt();
+        int numOfProcesses = input.nextInt();
         //take the max number of cpu bursts from user
         System.out.println("Enter the max number of cpu bursts: ");
         int maxNumOfCpuBursts = input.nextInt();
@@ -44,11 +44,11 @@ public class HelloApplication extends Application {
         // take minimum IO burst time from user
         System.out.println("Enter the minimum IO burst time: ");
         int minIoBurst = input.nextInt();
-        Process[] processes = new Process[numOfProccesses];
-        generator(processes, numOfProccesses, maxArrivalTime, maxCpuBurst, maxIoBurst, minCpuBurst, minIoBurst, maxNumOfCpuBursts);
+        Process[] processes = new Process[numOfProcesses];
+        generator(processes, numOfProcesses, maxArrivalTime, maxCpuBurst, maxIoBurst, minCpuBurst, minIoBurst, maxNumOfCpuBursts);
         //sort the processes by arrival time
         Arrays.sort(processes);
-        //create a file to write the processes and thier data each in a line
+        //create a file to write the processes and their data each in a line
         File file = new File("input.txt");
         try {
             FileWriter writer = new FileWriter(file);
@@ -70,22 +70,75 @@ public class HelloApplication extends Application {
         System.out.println("Enter the time quantum 1: ");
         int timeQuantum = input.nextInt();
         int currentTimeQuantum = timeQuantum;
+        System.out.println("Enter the time quantum 2: ");
+        int timeQuantum2 = input.nextInt();
+        int currentTimeQuantum2 = timeQuantum2;
         int currentTime = 0;
-        Queue<Process> readyQueue = new LinkedList<>();
+        //I will transfer all the processes to the ready arraylist
+        ArrayList<Process> readyQueue = new ArrayList<>();
         Queue<Process> roundRobinQueue1 = new LinkedList<>();
+        Queue<Process> roundRobinQueue2 = new LinkedList<>();
+        int busyCpuTime = 0;
+        int totalCpuTime = 0;
         for(int i  = 0 ;  i < processes.length;i++){
             readyQueue.add(processes[i]);
         }
+
         while(true){
-            //if all processes are finished we break the loop
-            if(readyQueue.isEmpty() && roundRobinQueue1.isEmpty()){
-                break;
+            //we will make the system sleep
+            try {
+                Thread.sleep(400);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-           if(!readyQueue.isEmpty()){
-                if(readyQueue.peek().getArrivalTime() == currentTime){
-                    roundRobinQueue1.add(readyQueue.poll());
+
+            for(Process p : readyQueue){
+                //we will check if the process is in the ready queue and if it is not in the round-robin 1 queue
+                if(p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() <= 10){
+                    roundRobinQueue1.add(p);
+                    p.setInQueue(true);
+                }
+                else if (p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() > 10){
+                    roundRobinQueue2.add(p);
+                    p.setInQueue(true);
                 }
             }
+
+
+            //we will print the round-robin queue with the first cpu burst
+            if(!roundRobinQueue1.isEmpty()){
+                System.out.println("Round Robin Queue 1: ");
+                for(Process p : roundRobinQueue1){
+                    System.out.println(p.getPID() + " " +  p.getCpuBurst(0) + " " + currentTime);
+                    System.out.println("Number of preemptions: " + p.getNumberOfPreemptions());
+
+                }
+            }
+            if(!roundRobinQueue2.isEmpty()){
+                System.out.println("Round Robin Queue 2: ");
+                for(Process p : roundRobinQueue2){
+                    System.out.println(p.getPID() + " " +  p.getCpuBurst(0) + " " + currentTime);
+                    //print number of preemptions
+                    System.out.println("Number of preemptions: " + p.getNumberOfPreemptions());
+                }
+            }
+
+
+
+            //if all processes are finished we break the loop
+            boolean allFinished = true;
+            //print processes finish state
+            for(Process p : readyQueue){
+                if(!p.isFinished()){
+                    allFinished = false;
+                    break;
+                }
+            }
+
+            if(allFinished){
+                break;
+            }
+
             if(!roundRobinQueue1.isEmpty()){
                 if(roundRobinQueue1.peek().getCpuBurst(0) != 0 && currentTimeQuantum != 0){
                     currentTimeQuantum--;
@@ -93,40 +146,132 @@ public class HelloApplication extends Application {
                 }
                 else if(roundRobinQueue1.peek().getCpuBurst(0) != 0 && currentTimeQuantum == 0){
                     currentTimeQuantum = timeQuantum;
-                    roundRobinQueue1.add(roundRobinQueue1.poll());
-                    currentTime--;
-                }
-                else if(roundRobinQueue1.peek().getCpuBurst(0) == 0  && !roundRobinQueue1.peek().getCpuBursts().isEmpty()){
-                    //roundRobinQueue1.peek().setFinished(true);
-                    roundRobinQueue1.peek().setArrivalTime(currentTime + roundRobinQueue1.peek().getIoBurst(0));
-                    System.out.println("Process " + roundRobinQueue1.peek().getPID() + " finished at time " + currentTime + " new Arrival time " + roundRobinQueue1.peek().getArrivalTime());
-                    //we want to make the next cpu burst the first one if there is one
-                    roundRobinQueue1.peek().cutFirstCpuBurst();
-                    roundRobinQueue1.peek().cutFirstIoBurst();
-                    roundRobinQueue1.add(roundRobinQueue1.poll());
-                    currentTimeQuantum = timeQuantum;
-                    currentTime--;
+                    roundRobinQueue1.peek().incrementNumberOfPreemptions();
+                    if(roundRobinQueue1.peek().getNumberOfPreemptions() <= 10){
+                        roundRobinQueue1.add(roundRobinQueue1.poll());
 
-
+                    }
+                    else{
+                        roundRobinQueue2.add(roundRobinQueue1.poll());
+                    }
+                    currentTime--;
+                    totalCpuTime--;
+                    busyCpuTime++;
                 }
-                else if(roundRobinQueue1.peek().getCpuBurst(0) == 0 && roundRobinQueue1.peek().getCpuBursts().isEmpty()){
+                else if(roundRobinQueue1.peek().getCpuBurst(0) == 0 && roundRobinQueue1.peek().getCpuBursts().size() == 1){
                     roundRobinQueue1.peek().setFinished(true);
-                    System.out.println("Process " + roundRobinQueue1.peek().getPID() + " finished at time " + currentTime);
-                    roundRobinQueue1.poll();
-                    currentTimeQuantum = timeQuantum;
-                    currentTime--;
-                }
+                    //also make it finished at the ready queue
+                    for(Process p : readyQueue){
+                        if(p.getPID() == roundRobinQueue1.peek().getPID()){
+                            p.setFinished(true);
+                        }
+                    }
+                    System.out.println("Process " + roundRobinQueue1.peek().getPID() + " finished completely at time " + currentTime);
+                    roundRobinQueue1.peek().getCpuBursts().remove(0);
+                    roundRobinQueue1.peek().addFinishTime(currentTime);
+                    roundRobinQueue1.peek().setInQueue(false);
 
+
+                    System.out.println("Finish times: ");
+                    for(int i = 0 ; i < roundRobinQueue1.peek().getFinishTimes().size();i++){
+                        System.out.print(roundRobinQueue1.peek().getFinishTimes().get(i) + " ");
+                    }
+                    //we will print out the waiting time for the finished process
+                    System.out.println();
+                    System.out.println("Waiting time: ");
+                    for(Process p : readyQueue){
+                        if(p.getPID() == roundRobinQueue1.peek().getPID()){
+                            System.out.println(p.getWaitingTime() + " time units");
+                            break;
+                        }
+                    }
+                    roundRobinQueue1.poll();
+                    currentTime--;
+                    totalCpuTime--;
+                    busyCpuTime++;
                 }
-            currentTime++;
+                else if(roundRobinQueue1.peek().getCpuBurst(0) == 0 && roundRobinQueue1.peek().getCpuBursts().size() > 1){
+                    roundRobinQueue1.peek().setInQueue(false);
+                    roundRobinQueue1.peek().setArrivalTime(currentTime + roundRobinQueue1.peek().getIoBurst(0));
+                    roundRobinQueue1.peek().getCpuBursts().remove(0);
+                    roundRobinQueue1.peek().getIoBursts().remove(0);
+                    roundRobinQueue1.peek().addFinishTime(currentTime);
+                    //i want to print the ready queue
+                    System.out.println("Ready Queue: ");
+                    for(Process p : readyQueue){
+                        System.out.println(p.getPID() + " " + p.getArrivalTime());
+                    }
+                    //roundRobinQueue1.poll();
+
+                    readyQueue.add(roundRobinQueue1.poll());
+                    Collections.sort(readyQueue);
+
+                    currentTime--;
+                    totalCpuTime--;
+                    busyCpuTime++;
+                }
             }
+            else if(!roundRobinQueue2.isEmpty() && roundRobinQueue1.isEmpty()){
+                //same as above but for the second round-robin-1 queue
+                if(roundRobinQueue2.peek().getCpuBurst(0) != 0 && currentTimeQuantum2 != 0){
+                    currentTimeQuantum2--;
+                    roundRobinQueue2.peek().setCpuBurst(0,roundRobinQueue2.peek().getCpuBurst(0) - 1);
+                }
+                else if(roundRobinQueue2.peek().getCpuBurst(0) != 0 && currentTimeQuantum2 == 0){
+                    currentTimeQuantum2 = timeQuantum2;
+                    roundRobinQueue2.add(roundRobinQueue2.poll());
+                    currentTime--;
+                    totalCpuTime--;
+                    busyCpuTime++;
+                }
+                else if(roundRobinQueue2.peek().getCpuBurst(0) == 0 && roundRobinQueue2.peek().getCpuBursts().size() == 1){
+                    roundRobinQueue2.peek().setFinished(true);
+                    //also make it finished at the ready queue
+                    for(Process p : readyQueue){
+                        if(p.getPID() == roundRobinQueue2.peek().getPID()){
+                            p.setFinished(true);
+                        }
+                    }
+                    System.out.println("Process " + roundRobinQueue2.peek().getPID() + " finished completely at time " + currentTime);
+                    roundRobinQueue2.peek().getCpuBursts().remove(0);
+                    roundRobinQueue2.peek().addFinishTime(currentTime);
+                    roundRobinQueue2.peek().setInQueue(false);
+                    System.out.println("Finish times: ");
+                    for(int i = 0 ; i < roundRobinQueue2.peek().getFinishTimes().size();i++){
+                        System.out.print(roundRobinQueue2.peek().getFinishTimes().get(i) + " ");
+                    }
+                    System.out.println();
+                    System.out.println("Waiting time: ");
+                    for(Process p : readyQueue){
+                        if(p.getPID() == roundRobinQueue2.peek().getPID()){
+                            System.out.println(p.getWaitingTime() + " time units");
+                            break;
+                        }
+                    }
+
+                    readyQueue.add(roundRobinQueue2.poll());
+                    Collections.sort(readyQueue);
+                    currentTime--;
+                    totalCpuTime--;
+                    busyCpuTime++;
+                }
+            }
+            currentTime++;
+            totalCpuTime++;
         }
+        System.out.println("total cpu time: " + totalCpuTime);
+        System.out.println("busy cpu time: " + busyCpuTime);
+        float cpuUtilization = (float) busyCpuTime / totalCpuTime;
+        System.out.println("cpu utilization: " + cpuUtilization + "%");
+        System.exit(0);
+    }
 
     public static void generator(Process[] processes, int numProcesses, int maxArrivalTime, int maxCpuBurst, int maxIoBurst, int minCpuBurst, int minIoBurst, int maxNumOfCpuBursts) {
         for(int i = 0; i < processes.length ; i++) {
             processes[i] = new Process();
             processes[i].setPID(i+1);
             processes[i].setArrivalTime((int) (Math.random() * maxArrivalTime));
+            processes[i].setStaticArrivalTime(processes[i].getArrivalTime());
             //minNumOfCpuBursts = 1;
             //generate random number of cpu bursts
             processes[i].setNumOfCpuBursts((int) (Math.random() * maxNumOfCpuBursts) + 1);
@@ -142,6 +287,7 @@ public class HelloApplication extends Application {
                 ioBursts[j] = (int) (Math.random() * (maxIoBurst - minIoBurst)) + minIoBurst;
             }
             processes[i].setIoBursts(ioBursts);
+            processes[i].calcTotalCpuBurst();
         }
     }
 }
