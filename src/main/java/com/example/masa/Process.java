@@ -31,7 +31,7 @@ public class Process implements Comparable<Process> {
         ioBursts = new ArrayList<>();
         finishTime = new ArrayList<>();
         isInQueue = false;
-        numberOfPreemptions = 1;
+        numberOfPreemptions = 0;
 
 
     }

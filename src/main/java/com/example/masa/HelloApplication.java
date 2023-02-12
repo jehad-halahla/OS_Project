@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -74,10 +73,17 @@ public class HelloApplication extends Application {
         int timeQuantum2 = input.nextInt();
         int currentTimeQuantum2 = timeQuantum2;
         int currentTime = 0;
+        ArrayList<Integer>GanttChart = new ArrayList<>();
         //I will transfer all the processes to the ready arraylist
         ArrayList<Process> readyQueue = new ArrayList<>();
         Queue<Process> roundRobinQueue1 = new LinkedList<>();
         Queue<Process> roundRobinQueue2 = new LinkedList<>();
+        //the third queue will be the shortest remaining time first queue
+        Queue<Process> shortestRemainingTimeFirstQueue = new LinkedList<>();
+        //the fourth queue will be the first come first serve queue
+        Queue<Process> firstComeFirstServeQueue = new LinkedList<>();
+        //all queues done
+
         int busyCpuTime = 0;
         int totalCpuTime = 0;
         for(int i  = 0 ;  i < processes.length;i++){
@@ -142,6 +148,7 @@ public class HelloApplication extends Application {
             if(!roundRobinQueue1.isEmpty()){
                 if(roundRobinQueue1.peek().getCpuBurst(0) != 0 && currentTimeQuantum != 0){
                     currentTimeQuantum--;
+                    GanttChart.add(roundRobinQueue1.peek().getPID());
                     roundRobinQueue1.peek().setCpuBurst(0,roundRobinQueue1.peek().getCpuBurst(0) - 1);
                 }
                 else if(roundRobinQueue1.peek().getCpuBurst(0) != 0 && currentTimeQuantum == 0){
@@ -201,7 +208,6 @@ public class HelloApplication extends Application {
                     for(Process p : readyQueue){
                         System.out.println(p.getPID() + " " + p.getArrivalTime());
                     }
-                    //roundRobinQueue1.poll();
 
                     readyQueue.add(roundRobinQueue1.poll());
                     Collections.sort(readyQueue);
@@ -215,6 +221,7 @@ public class HelloApplication extends Application {
                 //same as above but for the second round-robin-1 queue
                 if(roundRobinQueue2.peek().getCpuBurst(0) != 0 && currentTimeQuantum2 != 0){
                     currentTimeQuantum2--;
+                    GanttChart.add(roundRobinQueue2.peek().getPID());
                     roundRobinQueue2.peek().setCpuBurst(0,roundRobinQueue2.peek().getCpuBurst(0) - 1);
                 }
                 else if(roundRobinQueue2.peek().getCpuBurst(0) != 0 && currentTimeQuantum2 == 0){
@@ -256,13 +263,36 @@ public class HelloApplication extends Application {
                     busyCpuTime++;
                 }
             }
+            else
+                GanttChart.add(0);
             currentTime++;
             totalCpuTime++;
         }
         System.out.println("total cpu time: " + totalCpuTime);
         System.out.println("busy cpu time: " + busyCpuTime);
-        float cpuUtilization = (float) busyCpuTime / totalCpuTime;
-        System.out.println("cpu utilization: " + cpuUtilization + "%");
+        System.out.println("Gantt Chart: ");
+        int busyCount = 0;
+for(int i = 0 ; i < GanttChart.size(); i++){
+            System.out.print(GanttChart.get(i));
+            if(GanttChart.get(i) != 0){
+                busyCount++;
+            }
+        }
+        System.out.println();
+        System.out.println("Throughput: " + busyCount + " processes per time unit");
+        //we will filter dupicate processes from the ready queue using hashset
+        Set<Process> set = new HashSet<Process>(readyQueue);
+        readyQueue.clear();
+        readyQueue.addAll(set);
+        //now we calculate the average waiting time
+        int totalWaitingTime = 0;
+        for(Process p : readyQueue){
+            totalWaitingTime += p.getWaitingTime();
+        }
+        //we will print the cpu utilization from the gannt chart
+        System.out.println("CPU Utilization: " + ((double)busyCount / GanttChart.size())*100 + "%");
+
+        System.out.println("Average waiting time: " + (double)totalWaitingTime / readyQueue.size());
         System.exit(0);
     }
 
