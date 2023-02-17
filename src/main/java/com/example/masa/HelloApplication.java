@@ -5,11 +5,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 public class HelloApplication extends Application {
-
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
@@ -44,12 +44,12 @@ public class HelloApplication extends Application {
         System.out.println("Enter the minimum IO burst time: ");
         int minIoBurst = input.nextInt();
         Process[] processes = new Process[numOfProcesses];
-        generator(processes, numOfProcesses, maxArrivalTime, maxCpuBurst, maxIoBurst, minCpuBurst, minIoBurst, maxNumOfCpuBursts);
+        //generator(processes, numOfProcesses, maxArrivalTime, maxCpuBurst, maxIoBurst, minCpuBurst, minIoBurst, maxNumOfCpuBursts);
         //sort the processes by arrival time
-        Arrays.sort(processes);
+        //Arrays.sort(processes);
         //create a file to write the processes and their data each in a line
         File file = new File("input.txt");
-        try {
+       /* try {
             FileWriter writer = new FileWriter(file);
             for (int i = 0; i < processes.length; i++) {
                 writer.write(processes[i].getPID() + " " + processes[i].getArrivalTime() + " ");
@@ -64,7 +64,7 @@ public class HelloApplication extends Application {
         } catch (IOException e) {
             System.out.println("An error occurred.");
             e.printStackTrace();
-        }
+        }*/
 
         System.out.println("Enter the time quantum 1: ");
         int timeQuantum = input.nextInt();
@@ -75,37 +75,55 @@ public class HelloApplication extends Application {
         int currentTime = 0;
         ArrayList<Integer>GanttChart = new ArrayList<>();
         //I will transfer all the processes to the ready arraylist
+        ArrayList<Process> jobs = new ArrayList<>();
         ArrayList<Process> readyQueue = new ArrayList<>();
         Queue<Process> roundRobinQueue1 = new LinkedList<>();
         Queue<Process> roundRobinQueue2 = new LinkedList<>();
         //the third queue will be the shortest remaining time first queue
         Queue<Process> shortestRemainingTimeFirstQueue = new LinkedList<>();
-        //the fourth queue will be the first come first serve queue
+        //the fourth queue will be the first-come-first-serve queue
         Queue<Process> firstComeFirstServeQueue = new LinkedList<>();
+        Queue<Process> FCFSQueue = new LinkedList<>();
         //all queues done
-
+        //we will call the method to read the input file
+        readInputFile(jobs);
+        Collections.sort(jobs);
         int busyCpuTime = 0;
         int totalCpuTime = 0;
-        for(int i  = 0 ;  i < processes.length;i++){
-            readyQueue.add(processes[i]);
+        for(Process p : jobs){
+            readyQueue.add(p);
         }
 
         while(true){
             //we will make the system sleep
+            /*
             try {
-                Thread.sleep(400);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
+            */
             for(Process p : readyQueue){
                 //we will check if the process is in the ready queue and if it is not in the round-robin 1 queue
-                if(p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() <= 10){
+                if(p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() < 10){
                     roundRobinQueue1.add(p);
                     p.setInQueue(true);
                 }
-                else if (p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() > 10){
+                else if (p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() >= 10){
                     roundRobinQueue2.add(p);
+                    p.setInQueue(true);
+                } else if (p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() < 20) {
+                    roundRobinQueue2.add(p);
+                    p.setInQueue(true);
+                }
+                else if(p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() >= 20){
+                    shortestRemainingTimeFirstQueue.add(p);
+                    p.setInQueue(true);
+                } else if (p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() > 23) {
+                    shortestRemainingTimeFirstQueue.add(p);
+                    p.setInQueue(true);
+                } else if (p.getArrivalTime() == currentTime && !p.isInQueue() && p.getNumberOfPreemptions() <=23) {
+                    firstComeFirstServeQueue.add(p);
                     p.setInQueue(true);
                 }
             }
@@ -128,6 +146,16 @@ public class HelloApplication extends Application {
                     System.out.println("Number of preemptions: " + p.getNumberOfPreemptions());
                 }
             }
+            if(!shortestRemainingTimeFirstQueue.isEmpty()){
+                System.out.println("shortest remaining time first queue:");
+                for(Process p : shortestRemainingTimeFirstQueue){
+                    System.out.println(p.getPID() + " " +  p.getCpuBurst(0) + " " + currentTime);
+                    //print number of preemptions
+                    System.out.println("Number of preemptions: " + p.getNumberOfPreemptions());
+                }
+            }
+            System.out.println("=====================================");
+
 
 
 
@@ -154,7 +182,7 @@ public class HelloApplication extends Application {
                 else if(roundRobinQueue1.peek().getCpuBurst(0) != 0 && currentTimeQuantum == 0){
                     currentTimeQuantum = timeQuantum;
                     roundRobinQueue1.peek().incrementNumberOfPreemptions();
-                    if(roundRobinQueue1.peek().getNumberOfPreemptions() <= 10){
+                    if(roundRobinQueue1.peek().getNumberOfPreemptions() < 10){
                         roundRobinQueue1.add(roundRobinQueue1.poll());
 
                     }
@@ -226,10 +254,21 @@ public class HelloApplication extends Application {
                 }
                 else if(roundRobinQueue2.peek().getCpuBurst(0) != 0 && currentTimeQuantum2 == 0){
                     currentTimeQuantum2 = timeQuantum2;
-                    roundRobinQueue2.add(roundRobinQueue2.poll());
-                    currentTime--;
-                    totalCpuTime--;
-                    busyCpuTime++;
+                    roundRobinQueue2.peek().incrementNumberOfPreemptions();
+                    if(roundRobinQueue2.peek().getNumberOfPreemptions() >= 20){
+                        shortestRemainingTimeFirstQueue.add(roundRobinQueue2.poll());
+                        currentTime--;
+                        totalCpuTime--;
+                        busyCpuTime++;
+                    }
+                    else
+                    {
+                        roundRobinQueue2.add(roundRobinQueue2.poll());
+                        currentTime--;
+                        totalCpuTime--;
+                        busyCpuTime++;
+                    }
+
                 }
                 else if(roundRobinQueue2.peek().getCpuBurst(0) == 0 && roundRobinQueue2.peek().getCpuBursts().size() == 1){
                     roundRobinQueue2.peek().setFinished(true);
@@ -255,8 +294,96 @@ public class HelloApplication extends Application {
                             break;
                         }
                     }
+                    roundRobinQueue2.poll();
+                    Collections.sort(readyQueue);
+                    currentTime--;
+                    totalCpuTime--;
+                    busyCpuTime++;
+                }
+            } else if (!shortestRemainingTimeFirstQueue.isEmpty() && roundRobinQueue1.isEmpty() && roundRobinQueue2.isEmpty()){
+                shortestRemainingTimeFirstQueue.peek().setCpuBurst(0,shortestRemainingTimeFirstQueue.peek().getCpuBurst(0) - 1);
+                //we will create an arraylist of processes that have the same shortest remaining time from the shortest remaining time first queue
+                ArrayList<Process> shortestRemainingTimeFirstQueueProcesses = new ArrayList<>(shortestRemainingTimeFirstQueue);
+                boolean preempt = false;
+                for(int i = 0 ; i < shortestRemainingTimeFirstQueue.size();i++){
+                    if(shortestRemainingTimeFirstQueue.peek().getCpuBurst(0) > shortestRemainingTimeFirstQueueProcesses.get(i).getCpuBurst(0)){
+                        shortestRemainingTimeFirstQueue.peek().incrementNumberOfPreemptions();
+                        if(shortestRemainingTimeFirstQueue.peek().getNumberOfPreemptions() > 23){
+                            firstComeFirstServeQueue.add(shortestRemainingTimeFirstQueue.poll());
+                            preempt = true;
+                        }
+                        else{
+                            preempt = true;
+                            shortestRemainingTimeFirstQueue.add(shortestRemainingTimeFirstQueue.poll());
+                        }
 
-                    readyQueue.add(roundRobinQueue2.poll());
+                    }
+                    if(preempt){
+                        currentTime--;
+                        totalCpuTime--;
+                        busyCpuTime++;
+                    }
+                    if(!preempt && shortestRemainingTimeFirstQueue.peek().getCpuBurst(0) == 0){
+                        shortestRemainingTimeFirstQueue.peek().setFinished(true);
+                        //also make it finished at the ready queue
+                        for(Process p : readyQueue){
+                            if(p.getPID() == shortestRemainingTimeFirstQueue.peek().getPID()){
+                                p.setFinished(true);
+                            }
+                        }
+                        System.out.println("Process " + shortestRemainingTimeFirstQueue.peek().getPID() + " finished completely at time " + currentTime);
+                        shortestRemainingTimeFirstQueue.peek().getCpuBursts().remove(0);
+                        shortestRemainingTimeFirstQueue.peek().addFinishTime(currentTime);
+                        shortestRemainingTimeFirstQueue.peek().setInQueue(false);
+                        System.out.println("Finish times: ");
+                        for(int j = 0 ; j < shortestRemainingTimeFirstQueue.peek().getFinishTimes().size();j++){
+                            System.out.print(shortestRemainingTimeFirstQueue.peek().getFinishTimes().get(j) + " ");
+                        }
+                        System.out.println();
+                        System.out.println("Waiting time: ");
+                        for(Process p : readyQueue){
+                            if(p.getPID() == shortestRemainingTimeFirstQueue.peek().getPID()){
+                                System.out.println(p.getWaitingTime() + " time units");
+                                break;
+                            }
+                        }
+                        shortestRemainingTimeFirstQueue.poll();
+                        Collections.sort(readyQueue);
+                        currentTime--;
+                        totalCpuTime--;
+                        busyCpuTime++;
+                    }
+
+                }
+                currentTime++;
+
+            }else if(!firstComeFirstServeQueue.isEmpty() && roundRobinQueue1.isEmpty() && roundRobinQueue2.isEmpty() && shortestRemainingTimeFirstQueue.isEmpty()){
+                if(firstComeFirstServeQueue.peek().getCpuBurst(0) == 0 && firstComeFirstServeQueue.peek().getNumOfCpuBursts() == 1){
+                    //the process is finished
+                    firstComeFirstServeQueue.peek().setFinished(true);
+                    //also make it finished at the ready queue
+                    for(Process p : readyQueue){
+                        if(p.getPID() == firstComeFirstServeQueue.peek().getPID()){
+                            p.setFinished(true);
+                        }
+                    }
+                    System.out.println("Process " + firstComeFirstServeQueue.peek().getPID() + " finished completely at time " + currentTime);
+                    firstComeFirstServeQueue.peek().getCpuBursts().remove(0);
+                    firstComeFirstServeQueue.peek().addFinishTime(currentTime);
+                    firstComeFirstServeQueue.peek().setInQueue(false);
+                    System.out.println("Finish times: ");
+                    for(int i = 0 ; i < firstComeFirstServeQueue.peek().getFinishTimes().size();i++){
+                        System.out.print(firstComeFirstServeQueue.peek().getFinishTimes().get(i) + " ");
+                    }
+                    System.out.println();
+                    System.out.println("Waiting time: ");
+                    for(Process p : readyQueue){
+                        if(p.getPID() == firstComeFirstServeQueue.peek().getPID()){
+                            System.out.println(p.getWaitingTime() + " time units");
+                            break;
+                        }
+                    }
+                    firstComeFirstServeQueue.poll();
                     Collections.sort(readyQueue);
                     currentTime--;
                     totalCpuTime--;
@@ -264,7 +391,7 @@ public class HelloApplication extends Application {
                 }
             }
             else
-                GanttChart.add(0);
+                GanttChart.add(-1);
             currentTime++;
             totalCpuTime++;
         }
@@ -272,15 +399,14 @@ public class HelloApplication extends Application {
         System.out.println("busy cpu time: " + busyCpuTime);
         System.out.println("Gantt Chart: ");
         int busyCount = 0;
-for(int i = 0 ; i < GanttChart.size(); i++){
+        for(int i = 0 ; i < GanttChart.size(); i++){
             System.out.print(GanttChart.get(i));
-            if(GanttChart.get(i) != 0){
+            if(GanttChart.get(i) != -1){
                 busyCount++;
             }
         }
         System.out.println();
-        System.out.println("Throughput: " + busyCount + " processes per time unit");
-        //we will filter dupicate processes from the ready queue using hashset
+        //we will filter duplicate processes from the ready queue using hashset
         Set<Process> set = new HashSet<Process>(readyQueue);
         readyQueue.clear();
         readyQueue.addAll(set);
@@ -289,10 +415,11 @@ for(int i = 0 ; i < GanttChart.size(); i++){
         for(Process p : readyQueue){
             totalWaitingTime += p.getWaitingTime();
         }
-        //we will print the cpu utilization from the gannt chart
+        //we will print the cpu utilization from the Gannt chart
         System.out.println("CPU Utilization: " + ((double)busyCount / GanttChart.size())*100 + "%");
 
         System.out.println("Average waiting time: " + (double)totalWaitingTime / readyQueue.size());
+        System.out.println("we love you dr.bashar :)  <3");
         System.exit(0);
     }
 
@@ -319,5 +446,35 @@ for(int i = 0 ; i < GanttChart.size(); i++){
             processes[i].setIoBursts(ioBursts);
             processes[i].calcTotalCpuBurst();
         }
+
+    }
+    // a method to read from input.txt into the jobs ArrayList
+
+    public static void readInputFile(ArrayList<Process> jobs) throws FileNotFoundException {
+        Scanner input = new Scanner(new File("input.txt"));
+        while(input.hasNextLine()) {
+            String line = input.nextLine();
+            String[] tokens = line.split(" ");
+            Process p = new Process();
+            p.setPID(Integer.parseInt(tokens[0]));
+            p.setArrivalTime(Integer.parseInt(tokens[1]));
+            p.setStaticArrivalTime(Integer.parseInt(tokens[1]));
+            ArrayList<Integer> cpuBursts = new ArrayList<Integer>();
+            ArrayList<Integer> ioBursts = new ArrayList<Integer>();
+            //cpu bursts and io burst alternate in the input file
+            for(int i = 0; i < tokens.length - 2; i++) {
+                if(i % 2 == 0) {
+                    cpuBursts.add(Integer.parseInt(tokens[i+2]));
+                }
+                else {
+                    ioBursts.add(Integer.parseInt(tokens[i+2]));
+                }
+            }
+            p.setCpuBursts(cpuBursts);
+            p.setIoBursts(ioBursts);
+            p.calcTotalCpuBurst();
+            jobs.add(p);
+        }
+        input.close();
     }
 }

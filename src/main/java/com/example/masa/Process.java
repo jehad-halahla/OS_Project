@@ -20,6 +20,15 @@ public class Process implements Comparable<Process> {
     //i will create an arraylist for the finis time for each burst
     private ArrayList<Integer> finishTime;
 
+
+    private int lastBurstType;
+    //we will now add parameters for the SRTF algorithm
+    private int remainingTimeSRTF;
+    private int lastBurstTimeSRTF;
+    private int lastBurstTypeSRTF;
+
+
+
     //create a constructor with all fields without taking parameters
     public Process() {
         PID = 0;
@@ -32,6 +41,11 @@ public class Process implements Comparable<Process> {
         finishTime = new ArrayList<>();
         isInQueue = false;
         numberOfPreemptions = 0;
+        lastBurstType = 0;
+        //we will now add parameters for the SRTF algorithm
+        remainingTimeSRTF = 0;
+        lastBurstTimeSRTF = 0;
+        lastBurstTypeSRTF = 0;
 
 
     }
@@ -143,9 +157,24 @@ public class Process implements Comparable<Process> {
     public void incrementNumberOfPreemptions() {
         this.numberOfPreemptions++;
     }
-    //set number of preemptions
-    public void setNumberOfPreemptions(int numberOfPreemption) {
-        this.numberOfPreemptions = numberOfPreemptions;
+    //we will create getters and setters for SRTF parameters
+    public int getRemainingTimeSRTF() {
+        return remainingTimeSRTF;
+    }
+    public void setRemainingTimeSRTF(int remainingTimeSRTF) {
+        this.remainingTimeSRTF = remainingTimeSRTF;
+    }
+    public int getLastBurstTimeSRTF() {
+        return lastBurstTimeSRTF;
+    }
+    public void setLastBurstTimeSRTF(int lastBurstTimeSRTF) {
+        this.lastBurstTimeSRTF = lastBurstTimeSRTF;
+    }
+    public int getInitialTotalBurst() {
+        return initialTotalBurst;
+    }
+    public void setInitialTotalBurst(int initialTotalBurst) {
+        this.initialTotalBurst = initialTotalBurst;
     }
 
     public int getFinishTime(int index) {
